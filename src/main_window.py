@@ -311,6 +311,8 @@ class MainWindow:
             self.channel.set_value(self.channel.L_INDICATOR, not self.channel.get_value(self.channel.L_INDICATOR))
         elif event.char == 'e':
             self.channel.set_value(self.channel.R_INDICATOR, not self.channel.get_value(self.channel.R_INDICATOR))
+        elif event.char == 'r':
+            self.channel.set_value(self.channel.REVERSE, not self.channel.get_value(self.channel.REVERSE))
 
     def __on_key_release_event(self, event: Event) -> None:
         """
