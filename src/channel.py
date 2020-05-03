@@ -24,9 +24,9 @@ class Channel:
         self.__receiving_socket.connect((host, int(port)))
 
         self.__sending_socket.sendall(sha256(password.encode()).digest())
-        awnser = self.__receiving_socket.recv(1024).decode()
+        answer = self.__receiving_socket.recv(1024).decode()
 
-        if awnser.strip() == "GRANTED":
+        if answer.strip() == "GRANTED":
             print('Granted')
         else: 
             print('rejected')
