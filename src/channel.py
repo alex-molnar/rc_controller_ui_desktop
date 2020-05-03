@@ -11,6 +11,20 @@ from time import sleep
 
 class Channel:
 
+    FORWARD = 'forward'
+    BACKWARD = 'backward'
+    LEFT = 'turn_left'
+    RIGHT = 'turn_right'
+    R_INDICATOR = 'right_indicator'
+    L_INDICATOR = 'left_indicator'
+    HAZARD_WARNING = 'hazard_warning'
+    LIGHTS = 'lights'
+    HORN = 'horn'
+    DISTANCE = 'distance'
+    SPEED = 'speed'
+    LINE = 'line'
+    REVERSE = 'reverse'
+
     def __init__(self, host, port, password):
         super().__init__()
         self.__message_table = defaultdict(bool)
@@ -28,12 +42,14 @@ class Channel:
 
         if answer.strip() == "GRANTED":
             print('Granted')
+            self.answer_thread = Thread(target=self.__handle_awnser)
+            self.answer_thread.start()
         else: 
             print('rejected')
 
     def __handle_awnser(self):
         while True:
-            data = self.__receiving_socket.recv(4096).decode()
+            data = self.__receiving_socket.recv(1024).decode().strip()
             if not data:
                 break
             else:
@@ -51,13 +67,9 @@ class Channel:
     def __send_message(self):
         self.__sending_socket.sendall(dumps(self.__message_table).encode())
 
-    def start(self):
-        self.awnser_thread = Thread(target=self.__handle_awnser)
-        self.awnser_thread.start()
-
     def deactivate(self):
         self.__sending_socket.close()
-        self.awnser_thread.join()
+        self.answer_thread.join()
 
     def set_value(self, key, value):
         self.__lock.acquire()
