@@ -1,4 +1,51 @@
-from tkinter import Tk, Label, Button, Frame, Event
+from tkinter import Tk, Label, Button, Frame, Entry, Toplevel, Event, BOTH
+from src.channel import Channel
+
+
+class ConnectionDialog:
+    """
+    Class handling the user input for the connection with the controller
+    """
+
+    def __init__(self, parent):
+        self.top = Toplevel(parent)
+        self.top.columnconfigure(0, weight=MainWindow.WEIGHT)
+        self.top.columnconfigure(1, weight=MainWindow.WEIGHT)
+        for i in range(4):
+            self.top.rowconfigure(i, weight=MainWindow.WEIGHT)
+
+        host_label = Label(self.top, text='Host: ', background=MainWindow.BACKGROUND_COLOR)
+        host_label.grid(row=0, column=0, sticky=MainWindow.FILL)
+        self.host_entry = Entry(self.top, background=MainWindow.BACKGROUND_COLOR)
+        self.host_entry.grid(row=0, column=1, sticky=MainWindow.FILL)
+
+        port_label = Label(self.top, text='Port: ', background=MainWindow.BACKGROUND_COLOR)
+        port_label.grid(row=1, column=0, sticky=MainWindow.FILL)
+        self.port_entry = Entry(self.top, background=MainWindow.BACKGROUND_COLOR)
+        self.port_entry.grid(row=1, column=1, sticky=MainWindow.FILL)
+
+        password_label = Label(self.top, text='Password: ', background=MainWindow.BACKGROUND_COLOR)
+        password_label.grid(row=2, column=0, sticky=MainWindow.FILL)
+        self.password_entry = Entry(self.top, show='*', background=MainWindow.BACKGROUND_COLOR)
+        self.password_entry.grid(row=2, column=1, sticky=MainWindow.FILL)
+
+        button_frame = Frame(self.top)
+        button_frame.grid(row=3, column=0, sticky=MainWindow.FILL, columnspan=2)
+        connect_button = Button(button_frame, text='Connect.', command=self.__connect, background=MainWindow.BACKGROUND_COLOR)
+        connect_button.pack(fill=BOTH)
+
+    def __connect(self) -> None:
+        """
+        Saves the inputs given by the user
+
+        :Assumptions: None
+
+        :return: None
+        """
+        self.host = self.host_entry.get()
+        self.port = self.port_entry.get()
+        self.password = self.password_entry.get()
+        self.top.destroy()
 
 
 class MainWindow:
@@ -29,7 +76,6 @@ class MainWindow:
     HORN_TEXT           = '📯'
     REVERSE_SWITCH_TEXT = 'R'
 
-
     def __init__(self):
         """Initializing the main window"""
 
@@ -41,6 +87,11 @@ class MainWindow:
         self.__handle_labels_layout()
         self.__handle_light_button_layout()
         self.__handle_move_button_layout()
+
+        dial = ConnectionDialog(self.window)
+        self.window.wait_window(dial.top)
+
+        self.channel = Channel(dial.host, dial.port, dial.password)
 
         self.window.mainloop()
 
