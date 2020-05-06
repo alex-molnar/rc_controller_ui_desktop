@@ -6,8 +6,6 @@ from blinker import signal
 from sys import argv
 from hashlib import sha256
 
-from time import sleep
-
 
 class Channel:
 

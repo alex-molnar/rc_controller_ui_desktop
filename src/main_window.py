@@ -52,10 +52,11 @@ class ConnectionDialog:
 class MainWindow:
     """class for creating the main window of the application"""
 
-    FILL             = 'nesw'
-    MIN_SIZE         = 100
-    WEIGHT           = 1
-    BACKGROUND_COLOR = '#87edfa'
+    FILL                = 'nesw'
+    MIN_SIZE            = 100
+    WEIGHT              = 1
+    BACKGROUND_COLOR    = '#87edfa'
+    ACTIVE_ARROW_COLOR  = '#ffb2f4'
 
     DISTANCE_TEXT = 'Distance: '
     DISTANCE_MES  = 'cm'
@@ -104,19 +105,23 @@ class MainWindow:
 
         self.window.bind('<KeyPress>', self.__on_key_press_event)
         self.window.bind('<KeyRelease>', self.__on_key_release_event)
-        self.channel.data_received.connect(self.__on_UI_update_received)
+
+        self.continue_update = True
+        self.window.after(10, self.__upadte_UI)
 
         self.window.mainloop()
 
     def __on_close_event(self) -> None:
         """
         Function that handles the user clicked exit event.
-        The channel with the controller itself should be closed properly, before exiting the application.
+          * The channel with the controller itself should be closed properly, before exiting the application.
+          * The UI updating thread should be stopped
 
         :Assumptions: None
 
         :return: None
         """
+        self.continue_update = False
         self.channel.deactivate()
         self.window.destroy()
 
@@ -303,7 +308,7 @@ class MainWindow:
                 97: self.channel.LEFT,
                 65363: self.channel.RIGHT,
                 100: self.channel.RIGHT,
-                142: self.channel.HORN,
+                98: self.channel.HORN,
                 108: self.channel.LIGHTS,
                 104: self.channel.HAZARD_WARNING,
                 114: self.channel.REVERSE,
@@ -347,18 +352,46 @@ class MainWindow:
             self.channel.set_value(self.switcher[event.keysym_num], False)
             self.key_event_modifier[self.switcher[event.keysym_num]] = False
 
-    def __on_UI_update_received(self, _) -> None:
+    def __upadte_UI(self) -> None:
         """
-        Handles the event, when data from the controller arrives, hence we should change the UI accordingly
+        Continuously updates the UI in the background.
 
-        :Assumptions: none
+        :Assumptions:
+          * This method is called on a separate thread, via Tkinter's after function
 
         :return: None
         """
-        # self.reverse_button.configure(
-        #     background='red' if self.channel.get_value(self.channel.REVERSE) else self.BACKGROUND_COLOR,
-        #     foreground=self.BACKGROUND_COLOR if self.channel.get_value(self.channel.REVERSE) else 'red'
-        # )
+        self.forward_button['background'] = \
+            self.ACTIVE_ARROW_COLOR if self.channel.get_value(self.channel.FORWARD) else self.BACKGROUND_COLOR
+        self.backward_button['background'] = \
+            self.ACTIVE_ARROW_COLOR if self.channel.get_value(self.channel.BACKWARD) else self.BACKGROUND_COLOR
+        self.left_button['background'] = \
+            self.ACTIVE_ARROW_COLOR if self.channel.get_value(self.channel.LEFT) else self.BACKGROUND_COLOR
+        self.right_button['background'] = \
+            self.ACTIVE_ARROW_COLOR if self.channel.get_value(self.channel.RIGHT) else self.BACKGROUND_COLOR
+
+        self.reverse_button['background'] = \
+            'red' if self.channel.get_value(self.channel.REVERSE) else self.BACKGROUND_COLOR
+        self.reverse_button['foreground'] = \
+            self.BACKGROUND_COLOR if self.channel.get_value(self.channel.REVERSE) else 'red'
+
+        self.light_switch['background'] = \
+            '#fdff82' if self.channel.get_value(self.channel.LIGHTS) else self.BACKGROUND_COLOR
+
+        constants = [self.channel.HAZARD_WARNING, self.channel.R_INDICATOR, self.channel.L_INDICATOR]
+        for index, indicator in enumerate([self.hazard_warning, self.right_indicator, self.left_indicator]):
+            indicator['background'] = \
+                'yellow' if self.channel.get_value(constants[index]) else self.BACKGROUND_COLOR
+
+        self.distance_label['text'] = \
+            self.DISTANCE_TEXT + str(self.channel.get_value(self.channel.DISTANCE)) + self.DISTANCE_MES
+        self.speed_label['text'] = \
+            self.SPEED_TEXT + str(self.channel.get_value(self.channel.SPEED)) + self.SPEED_MES
+        self.line_label['background'] = \
+            'black' if self.channel.get_value(self.channel.LINE) else 'white'
+
+        if self.continue_update:
+            self.window.after(10, self.__upadte_UI)
 
 
 if __name__ == '__main__':
