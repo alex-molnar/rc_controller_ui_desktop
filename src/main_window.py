@@ -92,9 +92,14 @@ class MainWindow:
         # dial = ConnectionDialog(self.window)
         # self.window.wait_window(dial.top)
 
-        self.channel = Channel('192.168.1.11', 8000, '69420')
+        # tmp!!!!! TODO:
+        port = int(input('port: '))
+        if port == '':
+            port = 8000
+        self.channel = Channel('192.168.1.11', port, '69420')
         # self.channel = Channel(dial.host, dial.port, dial.password)
 
+        self.switcher = self.__create_switcher()
         self.key_event_modifier = defaultdict(bool)
 
         self.window.bind('<KeyPress>', self.__on_key_press_event)
@@ -277,6 +282,36 @@ class MainWindow:
         )
         self.right_button.grid(row=1, column=2, sticky=self.FILL)
 
+    def __create_switcher(self):
+        """
+        Create the switcher object, for the key events, so implementing a switch case is possible,
+        without creating a new object every time a key is pressed
+
+        :Assumptions:
+          * The Channel object have been created, before this method is called
+
+        :return: the switcher object
+        """
+        return defaultdict(
+            lambda: 'None',
+            {
+                65362: self.channel.FORWARD,
+                119: self.channel.FORWARD,
+                65364: self.channel.BACKWARD,
+                115: self.channel.BACKWARD,
+                65361: self.channel.LEFT,
+                97: self.channel.LEFT,
+                65363: self.channel.RIGHT,
+                100: self.channel.RIGHT,
+                142: self.channel.HORN,
+                108: self.channel.LIGHTS,
+                104: self.channel.HAZARD_WARNING,
+                114: self.channel.REVERSE,
+                113: self.channel.L_INDICATOR,
+                101: self.channel.R_INDICATOR
+            }
+        )
+
     def __on_key_press_event(self, event: Event) -> None:
         """
         Handles the event, when the user presses a key
@@ -288,31 +323,13 @@ class MainWindow:
 
         :return: None
         """
-        if event.keysym_num in [65362, 119] and not self.key_event_modifier['up']:
-            self.channel.set_value(self.channel.FORWARD, True)
-            self.key_event_modifier['up'] = True
-        elif event.keysym_num in [65364, 115] and not self.key_event_modifier['down']:
-            self.channel.set_value(self.channel.BACKWARD, True)
-            self.key_event_modifier['down'] = True
-        elif event.keysym_num in [65361, 97] and not self.key_event_modifier['left']:
-            self.channel.set_value(self.channel.LEFT, True)
-            self.key_event_modifier['left'] = True
-        elif event.keysym_num in [65363, 100] and not self.key_event_modifier['right']:
-            self.channel.set_value(self.channel.RIGHT, True)
-            self.key_event_modifier['right'] = True
-        elif event.char == 'b' and not self.key_event_modifier['horn']:
-            self.channel.set_value(self.channel.HORN, True)
-            self.key_event_modifier['horn'] = True
-        elif event.char == 'l':
-            self.channel.set_value(self.channel.LIGHTS, not self.channel.get_value(self.channel.LIGHTS))
-        elif event.char == 'h':
-            self.channel.set_value(self.channel.HAZARD_WARNING, not self.channel.get_value(self.channel.HAZARD_WARNING))
-        elif event.char == 'q':
-            self.channel.set_value(self.channel.L_INDICATOR, not self.channel.get_value(self.channel.L_INDICATOR))
-        elif event.char == 'e':
-            self.channel.set_value(self.channel.R_INDICATOR, not self.channel.get_value(self.channel.R_INDICATOR))
-        elif event.char == 'r':
-            self.channel.set_value(self.channel.REVERSE, not self.channel.get_value(self.channel.REVERSE))
+
+        case = self.switcher[event.keysym_num]
+        if event.keysym_num in [101, 104, 108, 113, 114]:
+            self.channel.set_value(case, not self.channel.get_value(case))
+        elif not self.key_event_modifier[case]:
+            self.channel.set_value(case, True)
+            self.key_event_modifier[case] = True
 
     def __on_key_release_event(self, event: Event) -> None:
         """
@@ -325,21 +342,10 @@ class MainWindow:
 
         :return: None
         """
-        if event.keysym_num in [65362, 119]:
-            self.channel.set_value(self.channel.FORWARD, False)
-            self.key_event_modifier['up'] = False
-        elif event.keysym_num in [65364, 115]:
-            self.channel.set_value(self.channel.BACKWARD, False)
-            self.key_event_modifier['down'] = False
-        elif event.keysym_num in [65361, 97]:
-            self.channel.set_value(self.channel.LEFT, False)
-            self.key_event_modifier['left'] = False
-        elif event.keysym_num in [65363, 100]:
-            self.channel.set_value(self.channel.RIGHT, False)
-            self.key_event_modifier['right'] = False
-        elif event.char == 'b':
-            self.channel.set_value(self.channel.HORN, False)
-            self.key_event_modifier['horn'] = False
+
+        if event.keysym_num not in [101, 104, 108, 113, 114]:
+            self.channel.set_value(self.switcher[event.keysym_num], False)
+            self.key_event_modifier[self.switcher[event.keysym_num]] = False
 
     def __on_UI_update_received(self, _) -> None:
         """
