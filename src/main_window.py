@@ -102,6 +102,7 @@ class MainWindow:
 
         self.switcher = self.__create_switcher()
         self.key_event_modifier = defaultdict(bool)
+        self.ctrl_pressed = False
 
         self.window.bind('<KeyPress>', self.__on_key_press_event)
         self.window.bind('<KeyRelease>', self.__on_key_release_event)
@@ -328,11 +329,24 @@ class MainWindow:
 
         :return: None
         """
+        mod_switcher = {
+            97: 'auto_accelerating',
+            100: 'distance_keeping',
+            108: 'line_following'
+        }
 
         case = self.switcher[event.keysym_num]
-        if event.keysym_num in [101, 104, 108, 113, 114]:
+        if event.keysym_num in [65507, 65508] and not self.key_event_modifier['Ctrl']:
+            self.key_event_modifier['Ctrl'] = True
+            self.ctrl_pressed = True
+        elif self.ctrl_pressed and event.keysym_num not in [65507, 65508]:
+            self.channel.set_value(
+                mod_switcher[event.keysym_num],
+                not self.channel.get_value(mod_switcher[event.keysym_num])
+            )
+        elif not self.ctrl_pressed and event.keysym_num in [101, 104, 108, 113, 114]:
             self.channel.set_value(case, not self.channel.get_value(case))
-        elif not self.key_event_modifier[case]:
+        elif not self.ctrl_pressed and not self.key_event_modifier[case] and event.keysym_num not in [65507, 65508]:
             self.channel.set_value(case, True)
             self.key_event_modifier[case] = True
 
@@ -347,8 +361,10 @@ class MainWindow:
 
         :return: None
         """
-
-        if event.keysym_num not in [101, 104, 108, 113, 114]:
+        if event.keysym_num in [65507, 65508]:
+            self.key_event_modifier['Ctrl'] = False
+            self.ctrl_pressed = False
+        if event.keysym_num not in [97, 100, 101, 104, 108, 113, 114, 65507, 65508]:
             self.channel.set_value(self.switcher[event.keysym_num], False)
             self.key_event_modifier[self.switcher[event.keysym_num]] = False
 
@@ -383,10 +399,16 @@ class MainWindow:
             indicator['background'] = \
                 'yellow' if self.channel.get_value(constants[index]) else self.BACKGROUND_COLOR
 
+        distance = self.channel.get_value(self.channel.DISTANCE)
+        speed = self.channel.get_value(self.channel.SPEED)
         self.distance_label['text'] = \
-            self.DISTANCE_TEXT + str(self.channel.get_value(self.channel.DISTANCE)) + self.DISTANCE_MES
+            self.DISTANCE_TEXT + str(distance) + self.DISTANCE_MES
+        self.distance_label['background'] = \
+            "red" if distance < 10 else "yellow" if distance < 25 else self.BACKGROUND_COLOR
         self.speed_label['text'] = \
-            self.SPEED_TEXT + str(self.channel.get_value(self.channel.SPEED)) + self.SPEED_MES
+            self.SPEED_TEXT + str(speed) + self.SPEED_MES
+        self.speed_label['background'] = \
+            "red" if speed > 30 else 'yellow' if speed > 20 else self.BACKGROUND_COLOR
         self.line_label['background'] = \
             'black' if self.channel.get_value(self.channel.LINE) else 'white'
 
