@@ -368,6 +368,7 @@ class MainWindow:
             self.channel.set_value(self.switcher[event.keysym_num], False)
             self.key_event_modifier[self.switcher[event.keysym_num]] = False
 
+
     def __upadte_UI(self) -> None:
         """
         Continuously updates the UI in the background.
