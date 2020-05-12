@@ -2,7 +2,6 @@ from socket import socket, AF_INET, SOCK_STREAM
 from threading import Thread, Lock
 from json import dumps, loads
 from collections import defaultdict 
-from blinker import signal
 from sys import argv
 from hashlib import sha256
 
@@ -23,12 +22,16 @@ class Channel:
     LINE = 'line'
     REVERSE = 'reverse'
 
+    DISTANCE_KEEPING  = 'distance_keeping'
+    LINE_FOLLOWING    = 'line_following'
+
+    CHANGE_DIRECTION = 'change_direction'  # TODO: constants anyway
+
     def __init__(self, host, port, password):
         super().__init__()
         self.__message_table = defaultdict(bool)
         self.__data_table = defaultdict(bool)
         self.__lock = Lock()
-        self.data_received = signal('data received')
 
         self.__sending_socket = socket(AF_INET, SOCK_STREAM)
         self.__receiving_socket = socket(AF_INET, SOCK_STREAM)
@@ -57,7 +60,6 @@ class Channel:
                     for key, value in self.__data_table.items():
                         self.__message_table[key] = value
                     self.__receiving_socket.sendall(b'Done.')
-                    self.data_received.send(self)
                     self.__lock.release()
                 except Exception as e:
                     print('Exception happened in handleing: ', e)

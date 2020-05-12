@@ -34,6 +34,9 @@ class MainWindow(QWidget):
     LINE = 'line'
     REVERSE = 'reverse'
 
+    DISTANCE_KEEPING = 'distance_keeping'
+    LINE_FOLLOWING = 'line_following'
+
     widget_update_signal = pyqtSignal()
 
     def __init__(self):
@@ -43,10 +46,7 @@ class MainWindow(QWidget):
         dial.exec()
 
         # tmp!!!!! TODO:
-        port = input('port: ')
-        if port == '':
-            port = 8000
-        self.channel = Channel('192.168.1.11', int(port), '69420')
+        self.channel = Channel('192.168.1.11', 8000 + int(dial.port_field.text()), '69420')
         # self.channel = Channel(dial.host_field.text(), dial.port_field.text(), dial.password_field.text())
 
         self.move_buttons = dict()
@@ -128,7 +128,13 @@ class MainWindow(QWidget):
         if not event.isAutoRepeat():
             key = event.key()
 
-            if key == Qt.Key_Q:
+            if event.modifiers() and Qt.ControlModifier and key == Qt.Key_D:
+                self.channel.set_value(self.DISTANCE_KEEPING, not self.channel.get_value(self.DISTANCE_KEEPING))
+            elif event.modifiers() and Qt.ControlModifier and key == Qt.Key_L:
+                self.channel.set_value(self.LINE_FOLLOWING, not self.channel.get_value(self.LINE_FOLLOWING))
+            elif event.modifiers() and Qt.ControlModifier and key == Qt.Key_C:
+                self.channel.set_value(self.CHANGE_DIRECTION, not self.channel.get_value(self.CHANGE_DIRECTION))
+            elif key == Qt.Key_Q:
                 self.channel.set_value(self.L_INDICATOR, not self.channel.get_value(self.L_INDICATOR))
             elif key == Qt.Key_E:
                 self.channel.set_value(self.R_INDICATOR, not self.channel.get_value(self.R_INDICATOR))
@@ -224,6 +230,7 @@ class MainWindow(QWidget):
 
     def supervise_update(self):
         while self.lock.acquire(timeout=1):
+            print(' ')  # I have no f@ck!ng idea why I need this but, if I don't have it it doesn't exit
             self.lock.release()
             self.widget_update_signal.emit()
             sleep(0.05)

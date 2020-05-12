@@ -1,3 +1,4 @@
+from time import sleep
 from tkinter import Tk, Label, Button, Frame, Entry, Toplevel, Event, BOTH
 from collections import defaultdict
 from src.channel import Channel
@@ -32,7 +33,8 @@ class ConnectionDialog:
 
         button_frame = Frame(self.top)
         button_frame.grid(row=3, column=0, sticky=MainWindow.FILL, columnspan=2)
-        connect_button = Button(button_frame, text='Connect.', command=self.__connect, background=MainWindow.BACKGROUND_COLOR)
+        connect_button = Button(button_frame, text='Connect.', command=self.__connect,
+                                background=MainWindow.BACKGROUND_COLOR)
         connect_button.pack(fill=BOTH)
 
     def __connect(self) -> None:
@@ -52,30 +54,30 @@ class ConnectionDialog:
 class MainWindow:
     """class for creating the main window of the application"""
 
-    FILL                = 'nesw'
-    MIN_SIZE            = 100
-    WEIGHT              = 1
-    BACKGROUND_COLOR    = '#87edfa'
-    ACTIVE_ARROW_COLOR  = '#ffb2f4'
+    FILL = 'nesw'
+    MIN_SIZE = 100
+    WEIGHT = 1
+    BACKGROUND_COLOR = '#87edfa'
+    ACTIVE_ARROW_COLOR = '#ffb2f4'
 
     DISTANCE_TEXT = 'Distance: '
-    DISTANCE_MES  = 'cm'
-    DISTANCE_LEN  = len(DISTANCE_TEXT)
+    DISTANCE_MES = 'cm'
+    DISTANCE_LEN = len(DISTANCE_TEXT)
 
     SPEED_TEXT = 'Speed: '
-    SPEED_MES  = 'm/s'
-    SPEED_LEN  = len(SPEED_TEXT)
+    SPEED_MES = 'm/s'
+    SPEED_LEN = len(SPEED_TEXT)
 
-    LEFT_INDICATOR_TEXT  = '⮈'
+    LEFT_INDICATOR_TEXT = '⮈'
     RIGHT_INDICATOR_TEXT = '⮊'
-    HAZARD_WARNING_TEXT  = '⚠'
-    LIGHTS_SWITCH_TEXT   = '🔦'
+    HAZARD_WARNING_TEXT = '⚠'
+    LIGHTS_SWITCH_TEXT = '🔦'
 
-    FORWARD_ARROW_TEXT  = '⮝'
-    BACK_ARROW_TEXT     = '⮟'
-    LEFT_ARROW_TEXT     = '⮜'
-    RIGHT_ARROW_TEXT    = '⮞'
-    HORN_TEXT           = '📯'
+    FORWARD_ARROW_TEXT = '⮝'
+    BACK_ARROW_TEXT = '⮟'
+    LEFT_ARROW_TEXT = '⮜'
+    RIGHT_ARROW_TEXT = '⮞'
+    HORN_TEXT = '📯'
     REVERSE_SWITCH_TEXT = 'R'
 
     def __init__(self):
@@ -90,15 +92,15 @@ class MainWindow:
         self.__handle_light_button_layout()
         self.__handle_move_button_layout()
 
-        # dial = ConnectionDialog(self.window)
-        # self.window.wait_window(dial.top)
+        self.dial = ConnectionDialog(self.window)
+        self.connect_on_top = True
+        self.window.after(100, self.__ensure_connect_on_top)
+        self.window.wait_window(self.dial.top)
+        self.connect_on_top = False
 
         # tmp!!!!! TODO:
-        port = int(input('port: '))
-        if port == '':
-            port = 8000
-        self.channel = Channel('192.168.1.11', port, '69420')
-        # self.channel = Channel(dial.host, dial.port, dial.password)
+        self.channel = Channel('192.168.1.11', 8000 + int(self.dial.port), '69420')
+        # self.channel = Channel(self.dial.host, self.dial.port, self.dial.password)
 
         self.switcher = self.__create_switcher()
         self.key_event_modifier = defaultdict(bool)
@@ -122,9 +124,16 @@ class MainWindow:
 
         :return: None
         """
+        self.channel.set_value(self.channel.DISTANCE_KEEPING, False)
+        self.channel.set_value(self.channel.LINE_FOLLOWING, False)
         self.continue_update = False
         self.channel.deactivate()
         self.window.destroy()
+
+    def __ensure_connect_on_top(self):
+        if self.connect_on_top:
+            self.dial.top.lift()
+            self.window.after(100, self.__ensure_connect_on_top)
 
     def __handle_labels_layout(self) -> None:
         """
@@ -329,11 +338,13 @@ class MainWindow:
 
         :return: None
         """
-        mod_switcher = {
-            97: 'auto_accelerating',
-            100: 'distance_keeping',
-            108: 'line_following'
-        }
+        mod_switcher = defaultdict(
+            lambda: 'None',
+            {
+                100: self.channel.DISTANCE_KEEPING,
+                108: self.channel.LINE_FOLLOWING
+            }
+        )
 
         case = self.switcher[event.keysym_num]
         if event.keysym_num in [65507, 65508] and not self.key_event_modifier['Ctrl']:
@@ -367,7 +378,6 @@ class MainWindow:
         if event.keysym_num not in [97, 100, 101, 104, 108, 113, 114, 65507, 65508]:
             self.channel.set_value(self.switcher[event.keysym_num], False)
             self.key_event_modifier[self.switcher[event.keysym_num]] = False
-
 
     def __upadte_UI(self) -> None:
         """
