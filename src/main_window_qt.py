@@ -36,6 +36,9 @@ class MainWindow(QWidget):
 
     DISTANCE_KEEPING = 'distance_keeping'
     LINE_FOLLOWING = 'line_following'
+    KEEP_CONTAINED = 'keep_contained'
+
+    CHANGE_DIRECTION = 'change_direction'
 
     widget_update_signal = pyqtSignal()
 
@@ -46,7 +49,11 @@ class MainWindow(QWidget):
         dial.exec()
 
         # tmp!!!!! TODO:
-        self.channel = Channel('192.168.1.11', 8000 + int(dial.port_field.text()), '69420')
+        try:
+            self.channel = Channel('192.168.1.11', 8000 + int(dial.port_field.text()), '69420')
+        except ValueError as e:
+            self.channel = Channel('192.168.1.11', 8000, '69420')
+
         # self.channel = Channel(dial.host_field.text(), dial.port_field.text(), dial.password_field.text())
 
         self.move_buttons = dict()
@@ -61,6 +68,7 @@ class MainWindow(QWidget):
 
         self.widget_update_signal.connect(self.update_widgets)
         self.lock = Lock()
+        self.update_active = True
 
         Thread(target=self.supervise_update).start()
 
@@ -68,7 +76,7 @@ class MainWindow(QWidget):
         self.move_buttons[self.FORWARD] = QLabel('🡅', self)
         self.move_buttons[self.BACKWARD] = QLabel('🡇', self)
         self.move_buttons[self.LEFT] = QLabel('🡄', self)
-        self.move_buttons[self.RIGHT] = QLabel('🡆',self)
+        self.move_buttons[self.RIGHT] = QLabel('🡆', self)
         self.move_buttons[self.REVERSE] = QLabel('R', self)
 
         for button in self.move_buttons.values():
@@ -132,7 +140,9 @@ class MainWindow(QWidget):
                 self.channel.set_value(self.DISTANCE_KEEPING, not self.channel.get_value(self.DISTANCE_KEEPING))
             elif event.modifiers() and Qt.ControlModifier and key == Qt.Key_L:
                 self.channel.set_value(self.LINE_FOLLOWING, not self.channel.get_value(self.LINE_FOLLOWING))
-            elif event.modifiers() and Qt.ControlModifier and key == Qt.Key_C:
+            elif event.modifiers() and Qt.ControlModifier and key == Qt.Key_K:
+                self.channel.set_value(self.KEEP_CONTAINED, not self.channel.get_value(self.KEEP_CONTAINED))
+            elif event.modifiers() and Qt.ShiftModifier and key == Qt.Key_C:
                 self.channel.set_value(self.CHANGE_DIRECTION, not self.channel.get_value(self.CHANGE_DIRECTION))
             elif key == Qt.Key_Q:
                 self.channel.set_value(self.L_INDICATOR, not self.channel.get_value(self.L_INDICATOR))
@@ -224,13 +234,18 @@ class MainWindow(QWidget):
         self.lock.release()
 
     def closeEvent(self, event):
+        self.channel.set_value(self.DISTANCE_KEEPING, False)
+        sleep(0.05)
+        self.channel.set_value(self.LINE_FOLLOWING, False)
+        sleep(0.05)
+        self.channel.set_value(self.KEEP_CONTAINED, False)
         self.channel.deactivate()
         self.lock.acquire()
+        self.update_active = False
         super().closeEvent(event)
 
     def supervise_update(self):
-        while self.lock.acquire(timeout=1):
-            print(' ')  # I have no f@ck!ng idea why I need this but, if I don't have it it doesn't exit
+        while self.lock.acquire(timeout=1) and self.update_active:
             self.lock.release()
             self.widget_update_signal.emit()
             sleep(0.05)
