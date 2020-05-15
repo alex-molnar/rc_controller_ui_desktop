@@ -7,6 +7,21 @@ from src.channel import Channel
 class ConnectionDialog:
     """
     Class handling the user input for the connection with the controller
+
+    .. attribute:: host
+        The IP of the host, - given by the user input, - which we want to connect to.
+
+    .. attribute:: port
+        The port,  - given by the user input, - on which we reach the host.
+
+    .. attribute:: password
+        The users password
+
+    .. warning:: Validation
+        | None of the above entries are validated, hence if the user mistypes,
+        | or misunderstands the entry field, it is possible that a non-legit IP address,
+        | or port is returned. That can lead to exceptions, therefore checking these values,
+        | before is advised.
     """
 
     def __init__(self, parent):
@@ -38,13 +53,6 @@ class ConnectionDialog:
         connect_button.pack(fill=BOTH)
 
     def __connect(self) -> None:
-        """
-        Saves the inputs given by the user
-
-        :Assumptions: None
-
-        :return: None
-        """
         self.host = self.host_entry.get()
         self.port = self.port_entry.get()
         self.password = self.password_entry.get()
@@ -52,7 +60,53 @@ class ConnectionDialog:
 
 
 class MainWindow:
-    """class for creating the main window of the application"""
+    """
+    Class representing the main window, hence the user interface of the application.
+    | Places all UI elements, in the right place, and connects necessary events to the corresponding handler.
+    | Constantly updates the UI based on the given states received from the controller.
+
+    .. note :: Tkinter
+        | This class does not need any external dependency for the UI, instead it uses
+        | the built-in Tkinter library
+
+    .. attribute:: window
+        The main window of the application
+
+    .. attribute:: dial
+        The dialog window responsible for the connection
+
+    .. attribute:: channel
+        A Channel object, which is responsible for the communication between this application, and the controller.
+
+
+
+    :var: FILL
+    :var: MIN_SIZE
+    :var: WEIGHT
+    :var: BACKGROUND_COLOR
+    :var: ACTIVE_ARROW_COLOR
+
+    :var: DISTANCE_TEXT
+    :var: DISTANCE_MES
+    :var: DISTANCE_LEN
+
+    :var: SPEED_TEXT
+    :var: SPEED_MES
+    :var: SPEED_LEN
+
+    :var: LEFT_INDICATOR_TEXT
+    :var: RIGHT_INDICATOR_TEXT
+    :var: HAZARD_WARNING_TEXT
+    :var: LIGHTS_SWITCH_TEXT
+
+    :var: FORWARD_ARROW_TEXT
+    :var: BACK_ARROW_TEXT
+    :var: LEFT_ARROW_TEXT
+    :var: RIGHT_ARROW_TEXT
+    :var: HORN_TEXT
+    :var: REVERSE_SWITCH_TEXT
+
+    """
 
     FILL = 'nesw'
     MIN_SIZE = 100
@@ -93,23 +147,23 @@ class MainWindow:
         self.__handle_move_button_layout()
 
         self.dial = ConnectionDialog(self.window)
-        self.connect_on_top = True
+        self.__connect_on_top = True
         self.window.after(100, self.__ensure_connect_on_top)
         self.window.wait_window(self.dial.top)
-        self.connect_on_top = False
+        self.__connect_on_top = False
 
         # tmp!!!!! TODO:
         self.channel = Channel('192.168.1.11', 8000 + int(self.dial.port), '69420')
         # self.channel = Channel(self.dial.host, self.dial.port, self.dial.password)
 
         self.switcher = self.__create_switcher()
-        self.key_event_modifier = defaultdict(bool)
-        self.ctrl_pressed = False
+        self.__key_event_modifier = defaultdict(bool)
+        self.__ctrl_pressed = False
 
         self.window.bind('<KeyPress>', self.__on_key_press_event)
         self.window.bind('<KeyRelease>', self.__on_key_release_event)
 
-        self.continue_update = True
+        self.__continue_update = True
         self.window.after(10, self.__upadte_UI)
 
         self.window.mainloop()
@@ -126,12 +180,12 @@ class MainWindow:
         """
         self.channel.set_value(self.channel.DISTANCE_KEEPING, False)
         self.channel.set_value(self.channel.LINE_FOLLOWING, False)
-        self.continue_update = False
+        self.__continue_update = False
         self.channel.deactivate()
         self.window.destroy()
 
     def __ensure_connect_on_top(self):
-        if self.connect_on_top:
+        if self.__connect_on_top:
             self.dial.top.lift()
             self.window.after(100, self.__ensure_connect_on_top)
 
@@ -347,19 +401,19 @@ class MainWindow:
         )
 
         case = self.switcher[event.keysym_num]
-        if event.keysym_num in [65507, 65508] and not self.key_event_modifier['Ctrl']:
-            self.key_event_modifier['Ctrl'] = True
-            self.ctrl_pressed = True
-        elif self.ctrl_pressed and event.keysym_num not in [65507, 65508]:
+        if event.keysym_num in [65507, 65508] and not self.__key_event_modifier['Ctrl']:
+            self.__key_event_modifier['Ctrl'] = True
+            self.__ctrl_pressed = True
+        elif self.__ctrl_pressed and event.keysym_num not in [65507, 65508]:
             self.channel.set_value(
                 mod_switcher[event.keysym_num],
                 not self.channel.get_value(mod_switcher[event.keysym_num])
             )
-        elif not self.ctrl_pressed and event.keysym_num in [101, 104, 108, 113, 114]:
+        elif not self.__ctrl_pressed and event.keysym_num in [101, 104, 108, 113, 114]:
             self.channel.set_value(case, not self.channel.get_value(case))
-        elif not self.ctrl_pressed and not self.key_event_modifier[case] and event.keysym_num not in [65507, 65508]:
+        elif not self.__ctrl_pressed and not self.__key_event_modifier[case] and event.keysym_num not in [65507, 65508]:
             self.channel.set_value(case, True)
-            self.key_event_modifier[case] = True
+            self.__key_event_modifier[case] = True
 
     def __on_key_release_event(self, event: Event) -> None:
         """
@@ -373,11 +427,11 @@ class MainWindow:
         :return: None
         """
         if event.keysym_num in [65507, 65508]:
-            self.key_event_modifier['Ctrl'] = False
-            self.ctrl_pressed = False
+            self.__key_event_modifier['Ctrl'] = False
+            self.__ctrl_pressed = False
         if event.keysym_num not in [97, 100, 101, 104, 108, 113, 114, 65507, 65508]:
             self.channel.set_value(self.switcher[event.keysym_num], False)
-            self.key_event_modifier[self.switcher[event.keysym_num]] = False
+            self.__key_event_modifier[self.switcher[event.keysym_num]] = False
 
     def __upadte_UI(self) -> None:
         """
@@ -423,7 +477,7 @@ class MainWindow:
         self.line_label['background'] = \
             'black' if self.channel.get_value(self.channel.LINE) else 'white'
 
-        if self.continue_update:
+        if self.__continue_update:
             self.window.after(10, self.__upadte_UI)
 
 
