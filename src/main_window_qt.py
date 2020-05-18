@@ -51,7 +51,7 @@ class MainWindow(QWidget):
         # tmp!!!!! TODO:
         try:
             self.channel = Channel('192.168.1.11', 8000 + int(dial.port_field.text()), '69420')
-        except ValueError as e:
+        except ValueError as _:
             self.channel = Channel('192.168.1.11', 8000, '69420')
 
         # self.channel = Channel(dial.host_field.text(), dial.port_field.text(), dial.password_field.text())

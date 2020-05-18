@@ -1,7 +1,7 @@
 from socket import socket, AF_INET, SOCK_STREAM
 from threading import Thread, Lock
 from json import dumps, loads
-from collections import defaultdict 
+from collections import defaultdict
 from sys import argv
 from hashlib import sha256
 
@@ -22,8 +22,8 @@ class Channel:
     LINE = 'line'
     REVERSE = 'reverse'
 
-    DISTANCE_KEEPING  = 'distance_keeping'
-    LINE_FOLLOWING    = 'line_following'
+    DISTANCE_KEEPING = 'distance_keeping'
+    LINE_FOLLOWING = 'line_following'
 
     CHANGE_DIRECTION = 'change_direction'  # TODO: constants anyway
 

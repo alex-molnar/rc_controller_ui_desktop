@@ -164,7 +164,7 @@ class MainWindow:
         self.window.bind('<KeyRelease>', self.__on_key_release_event)
 
         self.__continue_update = True
-        self.window.after(10, self.__upadte_UI)
+        self.window.after(10, self.__upadte_widgets)
 
         self.window.mainloop()
 
@@ -433,7 +433,7 @@ class MainWindow:
             self.channel.set_value(self.switcher[event.keysym_num], False)
             self.__key_event_modifier[self.switcher[event.keysym_num]] = False
 
-    def __upadte_UI(self) -> None:
+    def __upadte_widgets(self) -> None:
         """
         Continuously updates the UI in the background.
 
@@ -466,19 +466,29 @@ class MainWindow:
 
         distance = self.channel.get_value(self.channel.DISTANCE)
         speed = self.channel.get_value(self.channel.SPEED)
-        self.distance_label['text'] = \
-            self.DISTANCE_TEXT + str(distance) + self.DISTANCE_MES
-        self.distance_label['background'] = \
-            "red" if distance < 10 else "yellow" if distance < 25 else self.BACKGROUND_COLOR
-        self.speed_label['text'] = \
-            self.SPEED_TEXT + str(speed) + self.SPEED_MES
-        self.speed_label['background'] = \
-            "red" if speed > 30 else 'yellow' if speed > 20 else self.BACKGROUND_COLOR
-        self.line_label['background'] = \
-            'black' if self.channel.get_value(self.channel.LINE) else 'white'
+
+        self.distance_label['text'] = self.DISTANCE_TEXT + str(distance) + self.DISTANCE_MES
+        if distance < 10:
+            bg = 'red'
+        elif distance < 25:
+            bg = 'yellow'
+        else:
+            bg = self.BACKGROUND_COLOR
+        self.distance_label['background'] = bg
+
+        self.speed_label['text'] = self.SPEED_TEXT + str(speed) + self.SPEED_MES
+        if speed > 30:
+            bg = 'red'
+        elif speed > 20:
+            bg = 'yellow'
+        else:
+            bg = self.BACKGROUND_COLOR
+        self.speed_label['background'] = bg
+
+        self.line_label['background'] = 'black' if self.channel.get_value(self.channel.LINE) else 'white'
 
         if self.__continue_update:
-            self.window.after(10, self.__upadte_UI)
+            self.window.after(10, self.__upadte_widgets)
 
 
 if __name__ == '__main__':
