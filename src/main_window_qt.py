@@ -2,8 +2,8 @@ from PyQt5.QtWidgets import QWidget, QLabel, QPushButton
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.Qt import Qt
 from threading import Thread, Lock
-from src.channel import Channel
-from src.connect_dialog import ConnectDialog
+from channel import Channel
+from connect_dialog import ConnectDialog
 
 from time import sleep
 
