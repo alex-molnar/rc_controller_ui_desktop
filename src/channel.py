@@ -45,7 +45,7 @@ class Channel:
             print('Granted')
             self.answer_thread = Thread(target=self.__handle_awnser)
             self.answer_thread.start()
-        else: 
+        else:
             print('rejected')
 
     def __handle_awnser(self):
