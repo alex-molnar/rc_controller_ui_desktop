@@ -132,7 +132,7 @@ class MainWindow(QWidget):
         self.speed_label.move(285, 150)
         self.line_label.move(240, 10)
 
-    def keyPressEvent(self, event): 
+    def keyPressEvent(self, event):
         if not event.isAutoRepeat():
             key = event.key()
 
@@ -183,8 +183,8 @@ class MainWindow(QWidget):
         self.lock.acquire(timeout=1)
 
         self.distance_label.setText(
-            self.DISTANCE_TEXT + 
-            str(self.channel.get_value(self.DISTANCE)) + 
+            self.DISTANCE_TEXT +
+            str(self.channel.get_value(self.DISTANCE)) +
             self.DISTANCE_MEASURE
         )
 

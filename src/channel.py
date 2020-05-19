@@ -2,7 +2,6 @@ from socket import socket, AF_INET, SOCK_STREAM
 from threading import Thread, Lock
 from json import dumps, loads
 from collections import defaultdict
-from sys import argv
 from hashlib import sha256
 
 
@@ -92,11 +91,6 @@ class Channel:
 
     def get_values(self, keys):
         self.__lock.acquire()
-        data = [ self.__data_table[key] if key in self.__data_table else False for key in keys ]
+        data = [self.__data_table[key] if key in self.__data_table else False for key in keys]
         self.__lock.release()
         return data
-
-
-if __name__ == "__main__":
-    Channel(argv[1], argv[2]).start()
-    # TODO:

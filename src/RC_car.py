@@ -10,7 +10,7 @@ if __name__ == "__main__":
         MainWindow {
             background-color: #b8e5ff;
         }
-        
+
         ConnectDialog {
             background-color: #b8e5ff;
         }
@@ -22,7 +22,7 @@ if __name__ == "__main__":
             font-size: 25px;
             text-align: center;
         }
-        
+
         QPushButton[dial="true"] {
             font-size: 18px;
         }
@@ -30,7 +30,7 @@ if __name__ == "__main__":
         QPushButton[active="true"] {
             background-color: yellow;
         }
-        
+
         QPushButton#lights[active="true"] {
             background-color: #fdff82;
         }
@@ -38,7 +38,7 @@ if __name__ == "__main__":
         QLabel#linefollower {
             border: none;
         }
-        
+
         QLabel[dial="true"] {
             font-size: 14px;
             border: none;
@@ -52,7 +52,7 @@ if __name__ == "__main__":
         QLabel[warning="true"] {
             background-color: yellow;
         }
-        
+
         QLabel[collide="true"] {
             background-color: red;
         }
@@ -60,7 +60,7 @@ if __name__ == "__main__":
         QLabel#linefollower[active="true"] {
             background-color: black;
         }
-        
+
         QLineEdit {
             background-color: #b8e5ff;
             border: none;

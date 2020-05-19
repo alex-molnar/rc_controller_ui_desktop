@@ -192,10 +192,10 @@ class MainWindow:
     def __handle_labels_layout(self) -> None:
         """
         Creates, and manages the layout for the labels, such as the distance label, speed label, and the follow the line label
-        
+
         :Assumptions: None
-        
-        :return: 
+
+        :return:
         """
         self.label_layout = Frame(master=self.window)
         self.label_layout.rowconfigure(0, weight=self.WEIGHT, minsize=self.MIN_SIZE)
@@ -215,7 +215,7 @@ class MainWindow:
         Creates, and manages the layout for the buttons, such as the light, and hazard warning switch, and the indicators
 
         :Assumptions: None
-        
+
         :return: None
         """
         self.lights_layout = Frame(master=self.window)
@@ -277,7 +277,7 @@ class MainWindow:
         Creates, and manages the layout for the buttons, such as the arrows, the reverse switch, and the horn
 
         :Assumptions: None
-        
+
         :return: None
         """
 
